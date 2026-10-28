@@ -87,10 +87,11 @@ http.createServer((req, res) => {
       if (!name) return send(res, 400, { error: 'Please enter your name' });
       if (!EMAIL.test(email)) return send(res, 400, { error: 'Please enter a valid email address' });
       if (pw.length < 8 || pw.length > 200) return send(res, 400, { error: 'Password must be at least 8 characters' });
+      const ph = clean(b.phone, 20); if (ph && !/^[+\d][\d\s-]{6,18}$/.test(ph)) return send(res, 400, { error: 'Please enter a valid phone number' });
       const L = rj(UF, []);
       if (L.some(u => u.email === email)) return send(res, 409, { error: 'This email is already registered. Please sign in.' });
       const salt = crypto.randomBytes(16).toString('hex'), hash = (await scrypt(pw, salt)).toString('hex');
-      const u = { id: 'U-' + crypto.randomBytes(6).toString('hex'), email, name, phone: clean(b.phone, 20), salt, hash, createdAt: Date.now() };
+      const u = { id: 'U-' + crypto.randomBytes(6).toString('hex'), email, name, phone: ph, salt, hash, createdAt: Date.now() };
       L.push(u); wj(UF, L);
       send(res, 200, { user: upub(u) }, { 'Set-Cookie': startSession(req, u.id) });
     });
@@ -115,8 +116,9 @@ http.createServer((req, res) => {
     return readBody(req, (err, b) => {
       if (err) return send(res, 400, { error: 'Bad request' });
       const name = clean(b.name, 80); if (!name) return send(res, 400, { error: 'Please enter your name' });
+      const ph = clean(b.phone, 20); if (ph && !/^[+\d][\d\s-]{6,18}$/.test(ph)) return send(res, 400, { error: 'Please enter a valid phone number' });
       const L = rj(UF, []), me = L.find(x => x.id === u.id);
-      Object.assign(me, { name, phone: clean(b.phone, 20), address: clean(b.address, 200), city: clean(b.city, 60), postal: clean(b.postal, 12) }); wj(UF, L);
+      Object.assign(me, { name, phone: ph, address: clean(b.address, 200), city: clean(b.city, 60), postal: clean(b.postal, 12) }); wj(UF, L);
       send(res, 200, { user: upub(me) });
     });
   }

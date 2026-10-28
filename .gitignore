@@ -1,0 +1,6 @@
+node_modules/
+orders.json
+users.json
+sessions.json
+admin-key.txt
+*.tmp
